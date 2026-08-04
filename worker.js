@@ -4,12 +4,14 @@ import searchGoogle from "./utils/searchGoogle.js";
 import searchBrave from "./utils/searchBrave.js";
 import searchDuckDuckGo from "./utils/searchDuckDuckGo.js";
 import searchBing from "./utils/searchBing.js";
+import searchBaidu from "./utils/searchBaidu.js";
 
 const SEARCH_ENGINES = {
   google: searchGoogle,
   brave: searchBrave,
   duckduckgo: searchDuckDuckGo,
   bing: searchBing,
+  baidu: searchBaidu,
 };
 
 /**
