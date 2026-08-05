@@ -1391,7 +1391,7 @@ const MCP_TOOLS = [
           type: "array",
           items: { type: "string", enum: MCP_ENGINE_ENUM },
           description:
-            "Optional: engines to use. Defaults are: baidu, so360 (optimized for mainland China). Bing etc. can be added explicitly.",
+            "Optional: engines to use. Defaults are: baidu, so360, duckduckgo (tavily when TAVILY_API_KEY is set).",
         },
         language: {
           type: "string",
