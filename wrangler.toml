@@ -42,6 +42,10 @@ AUTH_REQUIRED = "false"
 # 不要把真实 TOKEN 写入 wrangler.toml；使用 wrangler secret put TOKEN。
 # TOKEN = ""
 
+# Tavily 搜索 API key（可选，推荐）—— 作为默认链的可靠基座，避免免费爬虫引擎被挑战时无结果
+# 不要把真实 key 写入 wrangler.toml；使用 wrangler secret put TAVILY_API_KEY
+# TAVILY_API_KEY = ""
+
 # 搜索网关配置(可选)
 # DEFAULT_ENGINES = "startpage,duckduckgo,brave,mojeek,bing"
 # DEFAULT_TIMEOUT = "4000"
