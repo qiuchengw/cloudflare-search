@@ -1390,7 +1390,7 @@ const MCP_TOOLS = [
           type: "array",
           items: { type: "string", enum: MCP_ENGINE_ENUM },
           description:
-            "Optional: engines to use. Defaults are: baidu, startpage, duckduckgo, brave, mojeek, bing.",
+            "Optional: engines to use. Defaults are: baidu, so360, bing (optimized for mainland China).",
         },
         language: {
           type: "string",
