@@ -3,7 +3,7 @@ import { ApiError, normalizeError, toErrorPayload } from "./utils/errors.js";
 import { getSearchHtml } from "./utils/getHTML.js";
 import { extractPageContent } from "./utils/pageExtract.js";
 import { enforceRateLimit } from "./utils/rateLimit.js";
-import { searchAllWithMeta } from "./utils/searchGateway.js";
+import { searchAll, searchAllWithMeta } from "./utils/searchGateway.js";
 
 const ALLOWED_METHODS = "GET, POST, OPTIONS";
 const TARGET_FETCH_USER_AGENT =
@@ -1360,6 +1360,234 @@ function createErrorResponse(request, requestId, error) {
   return jsonResponse(request, toErrorPayload(normalized), status, headers);
 }
 
+/* ============================ MCP (Streamable HTTP) ============================ */
+
+const MCP_ENGINE_ENUM = [
+  "baidu",
+  "so360",
+  "startpage",
+  "duckduckgo",
+  "brave",
+  "qwant",
+  "yahoo",
+  "mojeek",
+  "bing",
+];
+
+const MCP_TOOLS = [
+  {
+    name: "web_search",
+    description:
+      "Search the web for current information, news, or any topic. " +
+      "Runs multiple engines (including Baidu for Chinese) simultaneously and " +
+      "returns aggregated results with source URLs and snippets. " +
+      "Use this when you need real-time information not in your training data.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "The search query string" },
+        engines: {
+          type: "array",
+          items: { type: "string", enum: MCP_ENGINE_ENUM },
+          description:
+            "Optional: engines to use. Defaults are: baidu, startpage, duckduckgo, brave, mojeek, bing.",
+        },
+        language: {
+          type: "string",
+          description: "Optional: language hint, e.g. zh-CN or en-US",
+        },
+        maxResults: {
+          type: "number",
+          description: "Optional: max results to return (default 10)",
+        },
+      },
+      required: ["query"],
+    },
+  },
+];
+
+function formatMCPResults(result) {
+  const rows = (result.results || [])
+    .slice(0, Number(result.maxResults) || 10)
+    .map(
+      (item, index) =>
+        `${index + 1}. [${String(item.engine || "").toUpperCase()}] ${item.title}\n   ${item.description || ""}\n   ${item.url}`,
+    )
+    .join("\n\n");
+
+  return [
+    `Search Query: "${result.query}"`,
+    `Total Results: ${result.number_of_results ?? result.results?.length ?? 0}`,
+    `Engines Used: ${(result.enabled_engines || []).join(", ")}`,
+    result.unresponsive_engines && result.unresponsive_engines.length > 0
+      ? `Unresponsive Engines: ${result.unresponsive_engines.join(", ")}`
+      : null,
+    "",
+    "Results:",
+    rows,
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+async function executeMCPTool(request, name, args) {
+  if (!args || typeof args.query !== "string" || !args.query.trim()) {
+    return {
+      content: [
+        { type: "text", text: "Error: query must be a non-empty string" },
+      ],
+      isError: true,
+    };
+  }
+
+  try {
+    const result = await searchAll({
+      query: args.query,
+      engines: args.engines,
+      language: args.language || env.DEFAULT_LANGUAGE,
+    });
+    result.maxResults = args.maxResults;
+    return {
+      content: [{ type: "text", text: formatMCPResults(result) }],
+    };
+  } catch (error) {
+    const normalized = normalizeError(error);
+    return {
+      content: [
+        {
+          type: "text",
+          text: `Search failed: [${normalized.code}] ${normalized.message}`,
+        },
+      ],
+      isError: true,
+    };
+  }
+}
+
+function mcpJsonResponse(request, data, status = 200) {
+  return jsonResponse(
+    request,
+    data,
+    status,
+    { "mcp-protocol-version": "2025-03-26" },
+  );
+}
+
+async function handleMCPMessage(request, message) {
+  const { method, id, params } = message || {};
+
+  switch (method) {
+    case "initialize":
+      return mcpJsonResponse(request, {
+        jsonrpc: "2.0",
+        id,
+        result: {
+          protocolVersion: "2025-03-26",
+          capabilities: { tools: {} },
+          serverInfo: { name: "cloudflare-search", version: "1.3.0" },
+          instructions:
+            "Use web_search to query across engines (baidu, startpage, duckduckgo, brave, qwant, yahoo, mojeek, bing).",
+        },
+      });
+
+    case "tools/list":
+      return mcpJsonResponse(request, {
+        jsonrpc: "2.0",
+        id,
+        result: { tools: MCP_TOOLS },
+      });
+
+    case "tools/call":
+      return mcpJsonResponse(request, {
+        jsonrpc: "2.0",
+        id,
+        result: await executeMCPTool(request, params?.name, params?.arguments),
+      });
+
+    case "notifications/initialized":
+      return null; // no response for notifications
+
+    case "ping":
+      return mcpJsonResponse(request, { jsonrpc: "2.0", id, result: {} });
+
+    default:
+      return mcpJsonResponse(request, {
+        jsonrpc: "2.0",
+        id: id ?? null,
+        error: { code: -32601, message: `Method not found: ${method}` },
+      });
+  }
+}
+
+async function handleMCP(request, requestId) {
+  // GET: SSE stream (stateless no-op)
+  if (request.method === "GET") {
+    return new Response(null, {
+      status: 200,
+      headers: {
+        "mcp-protocol-version": "2025-03-26",
+        ...buildCorsHeaders(request),
+      },
+    });
+  }
+
+  // DELETE: session termination (stateless no-op)
+  if (request.method === "DELETE") {
+    return new Response("OK", {
+      status: 200,
+      headers: buildCorsHeaders(request),
+    });
+  }
+
+  if (request.method !== "POST") {
+    return new Response("Method Not Allowed", {
+      status: 405,
+      headers: buildCorsHeaders(request),
+    });
+  }
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return mcpJsonResponse(request, {
+      jsonrpc: "2.0",
+      error: { code: -32700, message: "Parse error: invalid JSON" },
+      id: null,
+    }, 400);
+  }
+
+  if (!body || typeof body.method !== "string") {
+    return mcpJsonResponse(request, {
+      jsonrpc: "2.0",
+      error: { code: -32600, message: "Invalid Request: missing method" },
+      id: null,
+    }, 400);
+  }
+
+  try {
+    const result = await handleMCPMessage(request, body);
+    if (result === null) {
+      return new Response(null, {
+        status: 202,
+        headers: {
+          "mcp-protocol-version": "2025-03-26",
+          ...buildCorsHeaders(request),
+        },
+      });
+    }
+    return result;
+  } catch (error) {
+    const normalized = normalizeError(error);
+    console.error("[MCP] Error:", normalized.code, normalized.message);
+    return mcpJsonResponse(request, {
+      jsonrpc: "2.0",
+      error: { code: -32603, message: "Internal error" },
+      id: body?.id ?? null,
+    }, 500);
+  }
+}
+
 async function handleRequest(request) {
   const requestId = getRequestId(request);
   const url = new URL(request.url);
@@ -1385,6 +1613,11 @@ async function handleRequest(request) {
         message: "Method Not Allowed",
       })
     );
+  }
+
+  // MCP Streamable HTTP endpoint（支持 GET/DELETE/POST，需在方法校验前路由）
+  if (url.pathname === "/mcp") {
+    return handleMCP(request, requestId);
   }
 
   if (url.pathname === "/") {

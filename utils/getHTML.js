@@ -404,6 +404,18 @@ export function getSearchHtml() {
                       </label>
                       <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
                         <label class="engine-check">
+                          <input type="checkbox" name="engine" value="baidu" ${handlerEngineDefaultChecked(
+                            "baidu"
+                          )} class="rounded text-blue-500 focus:ring-blue-500">
+                          <span class="text-sm text-zinc-700 dark:text-zinc-300">百度</span>
+                        </label>
+                        <label class="engine-check">
+                          <input type="checkbox" name="engine" value="so360" ${handlerEngineDefaultChecked(
+                            "so360"
+                          )} class="rounded text-blue-500 focus:ring-blue-500">
+                          <span class="text-sm text-zinc-700 dark:text-zinc-300">360</span>
+                        </label>
+                        <label class="engine-check">
                           <input type="checkbox" name="engine" value="startpage" ${handlerEngineDefaultChecked(
                             "startpage"
                           )} class="rounded text-blue-500 focus:ring-blue-500">

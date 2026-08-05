@@ -6,6 +6,8 @@ import { mojeekAdapter } from "./searchMojeek.js";
 import { qwantAdapter } from "./searchQwant.js";
 import { startpageAdapter } from "./searchStartpage.js";
 import { yahooAdapter } from "./searchYahoo.js";
+import { baiduAdapter } from "./searchBaidu.js";
+import { so360Adapter } from "./searchSo360.js";
 
 const ENGINE_REGISTRY = {
   bing: bingAdapter,
@@ -15,6 +17,8 @@ const ENGINE_REGISTRY = {
   brave: braveAdapter,
   qwant: qwantAdapter,
   yahoo: yahooAdapter,
+  baidu: baiduAdapter,
+  so360: so360Adapter,
 };
 
 export function getEngineRegistry() {
