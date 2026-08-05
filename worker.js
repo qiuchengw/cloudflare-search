@@ -1390,7 +1390,7 @@ const MCP_TOOLS = [
           type: "array",
           items: { type: "string", enum: MCP_ENGINE_ENUM },
           description:
-            "Optional: engines to use. Defaults are: baidu, so360, bing (optimized for mainland China).",
+            "Optional: engines to use. Defaults are: baidu, so360 (optimized for mainland China). Bing etc. can be added explicitly.",
         },
         language: {
           type: "string",

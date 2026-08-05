@@ -12,7 +12,7 @@ const createDefaultEnv = () => ({
     "baidu",
     "so360",
   ],
-  DEFAULT_ENGINES: ["baidu", "so360", "bing"],
+  DEFAULT_ENGINES: ["baidu", "so360"],
   DEFAULT_LANGUAGE: "en",
   FALLBACK_MIN_RESULTS: "6",
   FALLBACK_MIN_CONTRIBUTING_ENGINES: "2",
