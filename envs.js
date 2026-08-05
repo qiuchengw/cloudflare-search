@@ -12,9 +12,10 @@ const createDefaultEnv = () => ({
     "baidu",
     "so360",
     "tavily",
+    "bocha",
   ],
-  // 默认链：tavily 作为 API 可靠基座（配置 TAVILY_API_KEY 才启用），baidu/so360 中文，duckduckgo 通用/备份
-  DEFAULT_ENGINES: ["tavily", "baidu", "so360", "duckduckgo"],
+  // 默认链：bocha/tavily 为 API 可靠基座（配 key 才启用），baidu/so360 中文，duckduckgo 通用/备份
+  DEFAULT_ENGINES: ["bocha", "tavily", "baidu", "so360", "duckduckgo"],
   DEFAULT_LANGUAGE: "en",
   FALLBACK_MIN_RESULTS: "6",
   FALLBACK_MIN_CONTRIBUTING_ENGINES: "2",
@@ -30,6 +31,7 @@ const createDefaultEnv = () => ({
   AUTH_REQUIRED: "false",
   TOKEN: null,
   TAVILY_API_KEY: null,
+  BOCHA_API_KEY: null,
   CF_BROWSER_RENDERING_ACCOUNT_ID: null,
   CF_BROWSER_RENDERING_API_TOKEN: null,
   SEARCH_KV: null,

@@ -1363,6 +1363,7 @@ function createErrorResponse(request, requestId, error) {
 /* ============================ MCP (Streamable HTTP) ============================ */
 
 const MCP_ENGINE_ENUM = [
+  "bocha",
   "tavily",
   "baidu",
   "so360",

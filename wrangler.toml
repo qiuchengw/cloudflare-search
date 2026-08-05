@@ -66,23 +66,20 @@ AUTH_REQUIRED = "false"
 # CF_BROWSER_RENDERING_API_TOKEN = "your-browser-rendering-api-token"
 
 # ============================================
-# KV 缓存绑定(可选)
+# KV 缓存绑定
 # ============================================
-# 创建命令: wrangler kv namespace create SEARCH_KV
-# [[kv_namespaces]]
-# binding = "SEARCH_KV"
-# id = "your-kv-namespace-id"
+# 搜索响应缓存，重复查询命中缓存、节省 API 额度
+[[kv_namespaces]]
+binding = "SEARCH_KV"
+id = "8589583902404415ad8dfe7bbf01dbd7"
 
 # ============================================
-# KV 状态绑定(可选)
+# KV 状态绑定
 # ============================================
-# 用于跨 isolate 共享限流计数和引擎健康度（可选）。
-# 原 endday 配置的 namespace 属于其账号，无法直接使用。需要时在你自己账号下创建：
-#   wrangler kv namespace create SEARCH_STATE_KV
-# 然后把返回的 id 填到下面并取消注释。未配置时缓存/限流/健康会自动降级，不影响功能。
-# [[kv_namespaces]]
-# binding = "SEARCH_STATE_KV"
-# id = "your-kv-namespace-id"
+# 用于跨 isolate 共享限流计数和引擎健康度
+[[kv_namespaces]]
+binding = "SEARCH_STATE_KV"
+id = "abf522c8c80c40a88fc17b77e4d81d8c"
 
 # ============================================
 # 环境配置(可选)

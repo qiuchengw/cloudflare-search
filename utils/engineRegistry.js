@@ -9,6 +9,7 @@ import { yahooAdapter } from "./searchYahoo.js";
 import { baiduAdapter } from "./searchBaidu.js";
 import { so360Adapter } from "./searchSo360.js";
 import { tavilyAdapter } from "./searchTavily.js";
+import { bochaAdapter } from "./searchBocha.js";
 
 const ENGINE_REGISTRY = {
   bing: bingAdapter,
@@ -21,6 +22,7 @@ const ENGINE_REGISTRY = {
   baidu: baiduAdapter,
   so360: so360Adapter,
   tavily: tavilyAdapter,
+  bocha: bochaAdapter,
 };
 
 export function getEngineRegistry() {
